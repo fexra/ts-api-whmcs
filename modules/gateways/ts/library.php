@@ -7,10 +7,10 @@
  *
  * @author Kacper Rowinski <krowinski@implix.com>
  * http://implix.com
- * Modified to work with monero-rpc wallet by Serhack and cryptochangements
+ * Modified to work with trtl-rpc wallet by Serhack and cryptochangements
  */
  
-class Monero_rpc
+class TS_rpc
 {
     protected $url = null, $is_debug = false, $parameters_structure = 'array';
 
@@ -35,7 +35,7 @@ class Monero_rpc
    
     public function __construct($pUrl, $pUser = null, $pPass = null) {
 
-		$gatewayx = getGatewayVariables("monero");
+		$gatewayx = getGatewayVariables("ts");
         $this->validate(false === extension_loaded('curl'), 'The curl extension must be loaded for using this class!');
         $this->validate(false === extension_loaded('json'), 'The json extension must be loaded for using this class!');
 		$this->url = $gatewayx['daemon_host']. ":" .$gatewayx['daemon_port'] . "/json_rpc";
@@ -111,7 +111,7 @@ class Monero_rpc
             $errorMessage = 'Request have return error: ' . $responseDecoded['error']['message'] . '; ' . "\n" .
                 'Request: ' . $request . '; ';
                 if ($responseDecoded['error']['message'] == "Method not found") {
-                	$errorMessage .= " Check the daemon hostname and daemon port settings in the Monero Pyament Gateway WHMCS config.";
+                	$errorMessage .= " Check the daemon hostname and daemon port settings in the TRTL Services Pyament Gateway WHMCS config.";
                 }
             if (isset($responseDecoded['error']['data']))
             {
@@ -240,7 +240,7 @@ class Monero_rpc
     }
     
     /* 
-     * The following functions can all be called to interact with the Monero RPC wallet
+     * The following functions can all be called to interact with the TRTL Services RPC wallet
      * They will majority of them will return the result as an array
      * Example: $daemon->address(); where $daemon is an instance of this class, will return the wallet address as string within an array
      */

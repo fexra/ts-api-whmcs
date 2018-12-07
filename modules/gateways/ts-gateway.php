@@ -3,27 +3,24 @@ if (!defined("WHMCS")) {
     die("This file cannot be accessed directly");
 }
 
-
-
-function monero_MetaData()
+function ts_MetaData()
 {
     return array(
-        'DisplayName' => 'Monero',
+        'DisplayName' => 'TRTL Services',
         'APIVersion' => '1.1', // Use API Version 1.1
         'DisableLocalCredtCardInput' => true,
         'TokenisedStorage' => false,
     );
 }
-function monero_Config(){
+
+function ts_Config(){
 	return array(
-		'FriendlyName' => array('Type' => 'System','Value' => 'Monero'),
-		'address' => array('FriendlyName' => 'Monero Address','Type' => 'text','Size' => '94','Default' => '','Description' => 'Not used yet'),
+		'FriendlyName' => array('Type' => 'System','Value' => 'TRTL Services'),
+		'address' => array('FriendlyName' => 'TRTL Services Address','Type' => 'text','Size' => '187','Default' => '','Description' => 'Not used yet'),
 		'secretkey' => array('FriendlyName' => 'Module Secret Key','Type' => 'text','Default' => '21ieudgqwhb32i7tyg','Description' => 'Enter a unique key to verify callbacks'),
-		'daemon_host' => array('FriendlyName' => 'Wallet RPC Host','Type' => 'text','Default' => 'localhost','Description' => 'Connection settings for the Monero Wallet RPC daemon.'),
-		'daemon_port' => array('FriendlyName' => 'Wallet RPC Port','Type'  => 'text','Default' => '18081','Description' => ''),
-		'daemon_user' => array('FriendlyName' => 'Wallet RPC Username','Type'  => 'text','Default' => '','Description' => ''),
-		'daemon_pass' => array('FriendlyName' => 'Wallet RPC Password','Type'  => 'text','Default' => '','Description' => ''),
-		'discount_percentage' => array('FriendlyName' => 'Discount Percentage','Type'  => 'text','Default' => '0%','Description' => 'Percentage discount for paying with Monero.')
+		'webhook_token' => array('FriendlyName' => 'Wallet RPC Host','Type' => 'text','Default' => '','Description' => 'Connection settings for the TRTL Services Wallet RPC daemon.'),
+
+		'discount_percentage' => array('FriendlyName' => 'Discount Percentage','Type'  => 'text','Default' => '0%','Description' => 'Percentage discount for paying with TRTL Services.')
     );
 }
 
@@ -36,9 +33,9 @@ function monero_Config(){
 *  @return String  A json string in the format {"CURRENCY_CODE":PRICE}
 *  
 */
-function monero_retrivePriceList($currencies = 'BTC,USD,EUR,CAD,INR,GBP,BRL') {
+function ts_retrivePriceList($currencies = 'BTC,USD,EUR,CAD,INR,GBP,BRL') {
 	
-	$source = 'https://min-api.cryptocompare.com/data/price?fsym=XMR&tsyms='.$currencies.'&extraParams=monero_woocommerce';
+	$source = 'https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms='.$currencies.'&extraParams=trtl_woocommerce';
 	
 	if (ini_get('allow_url_fopen')) {
 		
@@ -64,24 +61,24 @@ function monero_retrivePriceList($currencies = 'BTC,USD,EUR,CAD,INR,GBP,BRL') {
 	$ch = curl_init();
 	curl_setopt_array($ch, $options);
 	
-	$xmr_price = curl_exec($ch);
+	$trtl_price = curl_exec($ch);
 	
 	curl_close($ch);
 	
-	if ($xmr_price === false) {
+	if ($trtl_price === false) {
 		
-		echo 'Error while retrieving XMR price list';
+		echo 'Error while retrieving TRTL price list';
 		
 	}
 	
-	return $xmr_price;
+	return $trtl_price;
 	
 }
 
-function monero_retriveprice($currency) {
+function ts_retriveprice($currency) {
 	global $currency_symbol;
-	$xmr_price = monero_retrivePriceList('BTC,USD,EUR,CAD,INR,GBP,BRL');
-    $price = json_decode($xmr_price, TRUE);
+	$trtl_price = trtl_retrivePriceList('BTC,USD,EUR,CAD,INR,GBP,BRL');
+    $price = json_decode($trtl_price, TRUE);
 	if(!isset($price)){
 		echo "There was an error";
 	}
@@ -109,22 +106,22 @@ function monero_retriveprice($currency) {
 		$currency_symbol = "R$ ";
 		return $price['BRL'];
 	}
-	if($currency == 'XMR'){
+	if($currency == 'TRTL'){
 		$price = '1';
 		return $price;
 	}
 }
 
-function monero_changeto($amount, $currency){
-    $xmr_live_price = monero_retriveprice($currency);
+function ts_changeto($amount, $currency){
+    $xmr_live_price = trtl_retriveprice($currency);
 	$live_for_storing = $xmr_live_price * 100; //This will remove the decimal so that it can easily be stored as an integer
 	$new_amount = $amount / $xmr_live_price;
 	$rounded_amount = round($new_amount, 12);
     return $rounded_amount;
 }
 
-function xmr_to_fiat($amount, $currency){
-    $xmr_live_price = monero_retriveprice($currency);
+function ts_to_fiat($amount, $currency){
+    $xmr_live_price = trtl_retriveprice($currency);
     $amount = $amount / 1000000000000;
 	$new_amount = $amount * $xmr_live_price;
 	$rounded_amount = round($new_amount, 2);
@@ -132,13 +129,13 @@ function xmr_to_fiat($amount, $currency){
 }
 
 
+function ts_link($params) {
 
-function monero_link($params){
-global $currency_symbol;
+	global $currency_symbol;
+	$gatewaymodule = "ts";
+	$gateway = getGatewayVariables($gatewaymodule);
 
-$gatewaymodule = "monero";
-$gateway = getGatewayVariables($gatewaymodule);
-if(!$gateway["type"]) die("Module not activated");
+	if(!$gateway["type"]) die("Module not activated");
 
 
 	$invoiceid = $params['invoiceid'];
@@ -156,8 +153,8 @@ if(!$gateway["type"]) die("Module not activated");
 	$country = $params['clientdetails']['country'];
 	//$address = $params['address'];
 	$systemurl = $params['systemurl'];
-    // Transform Current Currency into Monero
-	$amount_xmr = monero_changeto($amount, $currency);
+    // Transform Current Currency into TRTL Services
+	$amount_xmr = trtl_changeto($amount, $currency);
 	
 	$post = array(
         'invoice_id'    => $invoiceid,
@@ -175,13 +172,13 @@ if(!$gateway["type"]) die("Module not activated");
         'amount'        => $amount,
         'currency'      => $currency     
     );
-	$form = '<form action="' . $systemurl . '/modules/gateways/monero/createinvoice.php" method="POST">';
+	$form = '<form action="' . $systemurl . '/modules/gateways/trtl/createinvoice.php" method="POST">';
     foreach ($post as $key => $value) {
         $form .= '<input type="hidden" name="' . $key . '" value = "' . $value .'" />';
     }
     $form .= '<input type="submit" value="' . $params['langpaynow'] . '" />';
     $form .= '</form>';
-	$form .= '<p>'.$amount_xmr. " XMR (". $currency_symbol . $amount . " " . $currency .')</p>';
+	$form .= '<p>'.$amount_xmr. " TRTL (". $currency_symbol . $amount . " " . $currency .')</p>';
 	if ($discount_setting > 0) {
 		$form .='<p><small>Discount Applied: ' . preg_replace("/[^0-9]/", "", $discount_setting) . '% </small></p>';
 	}
